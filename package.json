@@ -1,0 +1,31 @@
+{
+  "name": "studio-hybrid-v2",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm --prefix apps/web run dev",
+    "build": "npm run build --workspace=packages/core && npm run build --workspace=apps/web",
+    "lint": "eslint . --ignore-pattern 'docs/**'",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "depcheck": "depcheck --ignores=dependency-cruiser,immer,zustand,dexie,jszip,fake-indexeddb,@types/jszip,fontkit,@types/fontkit,pdf-lib,@pdf-lib/fontkit && depcruise --validate .dependency-cruiser.cjs packages apps",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm depcheck",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/fontkit": "^2.0.9",
+    "@types/jszip": "^3.4.1",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "depcheck": "^1.4.7",
+    "dependency-cruiser": "^16.0.0",
+    "eslint": "^8.56.0",
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "ignoreDirs": [
+    "docs",
+    "node_modules",
+    "dist"
+  ],
+  "ignoreMatches": [
+    "dependency-cruiser"
+  ],
+  "ignoreUnused": [
+    "dependency-cruiser",
+    "immer",
+    "zustand"
+  ]
+}
