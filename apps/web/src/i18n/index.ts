@@ -13,6 +13,7 @@ export const i18n = {
   },
   zoom: 'Perbesaran',
   defaultText: 'Ketik teks di sini...',
+  minWidthWarning: 'Gunakan layar yang lebih lebar (minimal 1024 px) untuk menggunakan Studio Hybrid.',
   header: {
     focusMode: 'Mode Fokus',
     exitFocusMode: 'Keluar Mode Fokus',
@@ -88,4 +89,34 @@ export const i18n = {
     on: 'ON',
     off: 'OFF',
   },
-};
+  uiKit: {
+    title: 'UI Kit — Komponen Dasar',
+    buttons: 'Tombol',
+    icons: 'Ikon',
+    formControls: 'Kontrol Formulir',
+    feedback: 'Umpan Balik',
+    overlays: 'Overlay',
+    navigation: 'Navigasi',
+  },
+} as const;
+
+/** Type for nested dot-notation keys (e.g. 'header.focusMode') */
+type FlattenKeys<T, P extends string = ''> = T extends string
+  ? P
+  : { [K in keyof T & string]: FlattenKeys<T[K], P extends '' ? K : `${P}.${K}`> }[keyof T & string];
+
+export type I18nKey = FlattenKeys<typeof i18n>;
+
+/**
+ * Lookup helper: t('header.focusMode') → 'Mode Fokus'.
+ * Returns the key itself if not found (fail-visible, never silent).
+ */
+export function t(key: I18nKey): string {
+  const parts = (key as string).split('.');
+  let current: unknown = i18n;
+  for (const part of parts) {
+    if (current == null || typeof current !== 'object') return key as string;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return typeof current === 'string' ? current : (key as string);
+}

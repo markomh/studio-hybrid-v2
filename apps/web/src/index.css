@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@import "./ui/tokens.css";
+
+/* ─── Base Resets ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ─── Focus Ring Utility ─── */
+.focus-ring {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── Scrollbar (thin, subtle) ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ─── Screen too small message ─── */
+.min-width-warning {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-8);
+}
+
+@media (max-width: 1023px) {
+  .min-width-warning {
+    display: flex;
+  }
+  .app-shell {
+    display: none !important;
+  }
+}

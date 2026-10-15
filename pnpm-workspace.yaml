@@ -3,6 +3,6 @@ packages:
   - 'apps/*'
 allowBuilds:
   '*': true
-  esbuild: set this to true or false
+  esbuild: true
 minimumReleaseAgeExclude:
   - zod@4.6.7
