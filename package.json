@@ -1,6 +1,7 @@
 {
   "name": "studio-hybrid-v2",
   "private": true,
+  "packageManager": "pnpm@9.0.0",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -11,11 +12,12 @@
     "lint": "eslint . --ignore-pattern 'docs/**'",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "depcheck": "depcheck --ignores=dependency-cruiser,immer,zustand,dexie,jszip,fake-indexeddb,@types/jszip,fontkit,@types/fontkit,pdf-lib,@pdf-lib/fontkit && depcruise --validate .dependency-cruiser.cjs packages apps",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm depcheck",
+    "depcheck": "depcheck --ignores=dependency-cruiser,immer,zustand,dexie,jszip,fake-indexeddb,@types/jszip,fontkit,@types/fontkit,pdf-lib,@pdf-lib/fontkit,@axe-core/playwright && depcruise --validate .dependency-cruiser.cjs packages apps",
+    "check": "npm run lint && npm run typecheck && npm test && npm run depcheck",
     "e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.40.0",
     "@types/fontkit": "^2.0.9",
     "@types/jszip": "^3.4.1",

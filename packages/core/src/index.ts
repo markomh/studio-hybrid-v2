@@ -6,3 +6,5 @@ export * from './fonts';
 export * from './text';
 export * from './layout';
 export * from './pdf';
+export * from './book/margins';
+

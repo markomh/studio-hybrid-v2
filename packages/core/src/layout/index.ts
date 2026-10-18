@@ -1,6 +1,7 @@
 import { Document, Page } from '../schema';
 import { wrapText, TextLine } from '../text';
 import { ptToMm } from '../units';
+import { computeMargins } from '../book/margins';
 
 export interface BasePrimitive {
   elementId?: string;
@@ -60,7 +61,6 @@ export function layout(doc: Document, pageId?: string): PageLayoutResult {
   const widthMm = doc.meta.trim.widthMm;
   const heightMm = doc.meta.trim.heightMm;
   const bleedMm = doc.meta.bleedMm;
-  const margins = doc.meta.margins;
 
   const primitives: LayoutPrimitive[] = [];
 
@@ -76,13 +76,16 @@ export function layout(doc: Document, pageId?: string): PageLayoutResult {
     strokeWidth: 0.5,
   });
 
+  const pageIndex = Math.max(0, doc.pages.findIndex((p) => p.id === targetPage.id));
+  const computedMargins = computeMargins(doc, pageIndex);
+
   // 2. Safe margin boundary (dashed guide)
   primitives.push({
     kind: 'rect',
-    x: margins.insideMm,
-    y: margins.topMm,
-    width: widthMm - (margins.insideMm + margins.outsideMm),
-    height: heightMm - (margins.topMm + margins.bottomMm),
+    x: computedMargins.leftMm,
+    y: computedMargins.topMm,
+    width: widthMm - (computedMargins.leftMm + computedMargins.rightMm),
+    height: heightMm - (computedMargins.topMm + computedMargins.bottomMm),
     fill: 'transparent',
     stroke: '#cbd5e1',
     strokeWidth: 0.25,
@@ -135,7 +138,12 @@ export function layout(doc: Document, pageId?: string): PageLayoutResult {
     widthMm,
     heightMm,
     bleedMm,
-    margins,
+    margins: {
+      topMm: computedMargins.topMm,
+      bottomMm: computedMargins.bottomMm,
+      insideMm: doc.meta.margins.insideMm,
+      outsideMm: doc.meta.margins.outsideMm,
+    },
     primitives,
   };
 }

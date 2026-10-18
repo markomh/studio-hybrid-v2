@@ -128,4 +128,42 @@ describe('Document Store History & Undo/Redo (I-4, I-5, I-7)', () => {
       (doc.meta as Record<string, unknown>).name = 'Direct Mutation';
     }).toThrow();
   });
+
+  it('supports addPage, duplicatePage, deletePage, and movePage with undo/redo (F3-R3)', () => {
+    const store = useDocumentStore.getState();
+    expect(store.document.pages.length).toBe(1);
+
+    // 1. Add page
+    const newPageId = store.addPage('body');
+    expect(useDocumentStore.getState().document.pages.length).toBe(2);
+    expect(useDocumentStore.getState().document.pages[1].id).toBe(newPageId);
+
+    // Undo addPage
+    store.undo();
+    expect(useDocumentStore.getState().document.pages.length).toBe(1);
+
+    // Redo addPage
+    store.redo();
+    expect(useDocumentStore.getState().document.pages.length).toBe(2);
+
+    // 2. Duplicate page
+    const duplicatedId = store.duplicatePage(newPageId);
+    expect(useDocumentStore.getState().document.pages.length).toBe(3);
+    expect(duplicatedId).toBeTruthy();
+
+    // 3. Move page
+    store.movePage(duplicatedId, 0);
+    expect(useDocumentStore.getState().document.pages[0].id).toBe(duplicatedId);
+
+    // 4. Delete page
+    store.deletePage(duplicatedId);
+    expect(useDocumentStore.getState().document.pages.length).toBe(2);
+    expect(useDocumentStore.getState().document.pages.some((p) => p.id === duplicatedId)).toBe(false);
+
+    // Ensure cannot delete last remaining page
+    store.deletePage(newPageId);
+    expect(useDocumentStore.getState().document.pages.length).toBe(1);
+    store.deletePage('page-1');
+    expect(useDocumentStore.getState().document.pages.length).toBe(1);
+  });
 });

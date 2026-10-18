@@ -180,6 +180,7 @@ Template halaman saya taruh paling depan karena paling menolong non-desainer, te
 | D-10 | Sumber dan lisensi set clipart SVG | Set terbuka yang lisensinya diperiksa |
 | D-11 | Audit modul V1 yang belum diperiksa (Cover, Batch, Toolkit, Dashboard, Asset Library) | Dilakukan sebelum fase 3 dimulai |
 | D-12 | Definisi "V2 matang" (bagian 2) | Empat kriteria di atas |
+| D-13 | Tema antarmuka | Tema terang (tema gelap menunggu V2 matang) |
 
 ## 13. Pernyataan visi
 

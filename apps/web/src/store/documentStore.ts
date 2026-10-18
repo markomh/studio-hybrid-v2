@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { produceWithPatches, applyPatches, produce, enablePatches, Patch } from 'immer';
-import { Document, Element, createDocument } from '@studio-hybrid/core';
+import { Document, Element, Page, PageRole, createDocument } from '@studio-hybrid/core';
 
 enablePatches();
 
@@ -26,6 +26,12 @@ export interface DocumentState {
   updateElement: (pageId: string, elementId: string, updates: Partial<Element>) => void;
   moveElement: (pageId: string, elementId: string, x: number, y: number) => void;
   deleteElement: (pageId: string, elementId: string) => void;
+
+  // Page Operations (F3-R3)
+  addPage: (role?: PageRole, afterPageId?: string) => string;
+  duplicatePage: (pageId: string) => string;
+  deletePage: (pageId: string) => void;
+  movePage: (pageId: string, targetIndex: number) => void;
 
   transaction: (label: string, fn: () => void) => void;
   undo: () => void;
@@ -158,6 +164,149 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     }
   },
 
+  addPage: (role = 'body', afterPageId) => {
+    const currentState = get();
+    const newPageId = crypto.randomUUID();
+    const newPage: Page = {
+      id: newPageId,
+      role,
+      elements: [],
+    };
+
+    const [nextDoc, patches, inversePatches] = produceWithPatches(
+      currentState.document,
+      (draft: Document) => {
+        if (afterPageId) {
+          const idx = draft.pages.findIndex((p) => p.id === afterPageId);
+          if (idx !== -1) {
+            draft.pages.splice(idx + 1, 0, newPage);
+            return;
+          }
+        }
+        draft.pages.push(newPage);
+      }
+    ) as [Document, Patch[], Patch[]];
+
+    if (currentState._isBatching) {
+      set({
+        document: nextDoc,
+        _batchPatches: [...(currentState._batchPatches || []), ...patches],
+        _batchInversePatches: [...inversePatches, ...(currentState._batchInversePatches || [])],
+      });
+    } else {
+      set((state) => ({
+        document: nextDoc,
+        past: [...state.past, { patches, inversePatches, label: 'addPage' }].slice(-MAX_HISTORY),
+        future: [],
+      }));
+    }
+
+    return newPageId;
+  },
+
+  duplicatePage: (pageId) => {
+    const currentState = get();
+    const targetPage = currentState.document.pages.find((p) => p.id === pageId);
+    if (!targetPage) return '';
+
+    const newPageId = crypto.randomUUID();
+    const duplicatedElements: Element[] = targetPage.elements.map((el) => ({
+      ...el,
+      id: crypto.randomUUID(),
+    }));
+
+    const duplicatedPage: Page = {
+      ...targetPage,
+      id: newPageId,
+      elements: duplicatedElements,
+    };
+
+    const [nextDoc, patches, inversePatches] = produceWithPatches(
+      currentState.document,
+      (draft: Document) => {
+        const idx = draft.pages.findIndex((p) => p.id === pageId);
+        if (idx !== -1) {
+          draft.pages.splice(idx + 1, 0, duplicatedPage);
+        } else {
+          draft.pages.push(duplicatedPage);
+        }
+      }
+    ) as [Document, Patch[], Patch[]];
+
+    if (currentState._isBatching) {
+      set({
+        document: nextDoc,
+        _batchPatches: [...(currentState._batchPatches || []), ...patches],
+        _batchInversePatches: [...inversePatches, ...(currentState._batchInversePatches || [])],
+      });
+    } else {
+      set((state) => ({
+        document: nextDoc,
+        past: [...state.past, { patches, inversePatches, label: 'duplicatePage' }].slice(-MAX_HISTORY),
+        future: [],
+      }));
+    }
+
+    return newPageId;
+  },
+
+  deletePage: (pageId) => {
+    const currentState = get();
+    if (currentState.document.pages.length <= 1) {
+      // Must maintain at least 1 page
+      return;
+    }
+
+    const [nextDoc, patches, inversePatches] = produceWithPatches(
+      currentState.document,
+      (draft: Document) => {
+        draft.pages = draft.pages.filter((p) => p.id !== pageId);
+      }
+    ) as [Document, Patch[], Patch[]];
+
+    if (currentState._isBatching) {
+      set({
+        document: nextDoc,
+        _batchPatches: [...(currentState._batchPatches || []), ...patches],
+        _batchInversePatches: [...inversePatches, ...(currentState._batchInversePatches || [])],
+      });
+    } else {
+      set((state) => ({
+        document: nextDoc,
+        past: [...state.past, { patches, inversePatches, label: 'deletePage' }].slice(-MAX_HISTORY),
+        future: [],
+      }));
+    }
+  },
+
+  movePage: (pageId, targetIndex) => {
+    const currentState = get();
+    const [nextDoc, patches, inversePatches] = produceWithPatches(
+      currentState.document,
+      (draft: Document) => {
+        const fromIdx = draft.pages.findIndex((p) => p.id === pageId);
+        if (fromIdx !== -1 && targetIndex >= 0 && targetIndex < draft.pages.length) {
+          const [movedPage] = draft.pages.splice(fromIdx, 1);
+          draft.pages.splice(targetIndex, 0, movedPage);
+        }
+      }
+    ) as [Document, Patch[], Patch[]];
+
+    if (currentState._isBatching) {
+      set({
+        document: nextDoc,
+        _batchPatches: [...(currentState._batchPatches || []), ...patches],
+        _batchInversePatches: [...inversePatches, ...(currentState._batchInversePatches || [])],
+      });
+    } else {
+      set((state) => ({
+        document: nextDoc,
+        past: [...state.past, { patches, inversePatches, label: 'movePage' }].slice(-MAX_HISTORY),
+        future: [],
+      }));
+    }
+  },
+
   transaction: (label, fn) => {
     const state = get();
     if (state._isBatching) {
@@ -218,4 +367,5 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     });
   },
 }));
+
 export default useDocumentStore;

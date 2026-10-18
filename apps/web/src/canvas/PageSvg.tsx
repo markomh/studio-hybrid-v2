@@ -1,10 +1,12 @@
 import React, { useRef, useState, useCallback, useMemo } from 'react';
-import { Document, layout, PageLayoutResult, LayoutPrimitive } from '@studio-hybrid/core';
+import { Document, layout, PageLayoutResult, LayoutPrimitive, computeMargins } from '@studio-hybrid/core';
 
 export interface PageSvgProps {
   document: Document;
   pageId: string;
   zoom?: number;
+  showGuides?: boolean;
+  isMonochrome?: boolean;
   selectedElementId?: string | null;
   onSelectElement?: (id: string | null) => void;
   onMoveElement?: (elementId: string, x: number, y: number) => void;
@@ -21,6 +23,8 @@ export function PageSvg({
   document,
   pageId,
   zoom = 1,
+  showGuides = true,
+  isMonochrome = false,
   selectedElementId = null,
   onSelectElement,
   onMoveElement,
@@ -31,6 +35,14 @@ export function PageSvg({
   const layoutResult: PageLayoutResult = useMemo(() => {
     return layout(document, pageId);
   }, [document, pageId]);
+
+  const pageIndex = Math.max(0, document.pages.findIndex((p) => p.id === pageId));
+  const margins = computeMargins(document, pageIndex);
+  const bleedMm = document.meta.bleedMm;
+  const widthMm = layoutResult.widthMm;
+  const heightMm = layoutResult.heightMm;
+  const targetPage = document.pages.find((p) => p.id === pageId);
+  const isEmpty = !targetPage || targetPage.elements.length === 0;
 
   // Dragging state
   const [dragState, setDragState] = useState<{
@@ -52,12 +64,11 @@ export function PageSvg({
       e.stopPropagation();
       onSelectElement?.(elementId);
 
-      const targetPage = document.pages.find((p) => p.id === pageId);
       const targetElement = targetPage?.elements.find((el) => el.id === elementId);
 
       if (targetElement && svgRef.current) {
         const svgRect = svgRef.current.getBoundingClientRect();
-        const pixelsPerMm = svgRect.width / layoutResult.widthMm;
+        const pixelsPerMm = svgRect.width / widthMm;
 
         setDragState({
           elementId,
@@ -69,7 +80,7 @@ export function PageSvg({
         });
       }
     },
-    [document.pages, pageId, layoutResult.widthMm, onSelectElement]
+    [targetPage, widthMm, onSelectElement]
   );
 
   const handleMouseMove = useCallback(
@@ -94,20 +105,30 @@ export function PageSvg({
     setDragState(null);
   }, []);
 
+  // Total viewBox includes bleed area if guides are shown or standard trim
+  const viewBoxX = showGuides ? -bleedMm : 0;
+  const viewBoxY = showGuides ? -bleedMm : 0;
+  const viewBoxWidth = showGuides ? widthMm + 2 * bleedMm : widthMm;
+  const viewBoxHeight = showGuides ? heightMm + 2 * bleedMm : heightMm;
+
   return (
-    <div className="relative inline-block shadow-md border border-slate-300 bg-white select-none">
+    <div
+      className="relative inline-block shadow-md border border-slate-300 bg-white select-none transition-all"
+      style={{ filter: isMonochrome ? 'grayscale(100%)' : 'none' }}
+    >
       <svg
         ref={svgRef}
         data-testid="page-svg"
-        viewBox={`0 0 ${layoutResult.widthMm} ${layoutResult.heightMm}`}
+        viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`}
         style={{
-          width: `${layoutResult.widthMm * zoom}mm`,
-          height: `${layoutResult.heightMm * zoom}mm`,
+          width: `${viewBoxWidth * zoom}mm`,
+          height: `${viewBoxHeight * zoom}mm`,
         }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
+        {/* Render primitives (background paper and elements) */}
         {layoutResult.primitives.map((p: LayoutPrimitive, index: number) => {
           if (p.kind === 'rect') {
             return (
@@ -150,7 +171,53 @@ export function PageSvg({
 
           return null;
         })}
+
+        {/* Guides overlay inside SVG */}
+        {showGuides && (
+          <>
+            {/* Bleed line (Red dashed) */}
+            <rect
+              x={0}
+              y={0}
+              width={widthMm}
+              height={heightMm}
+              fill="none"
+              stroke="#cbd5e1"
+              strokeWidth={0.25}
+            />
+            <rect
+              x={-bleedMm}
+              y={-bleedMm}
+              width={widthMm + 2 * bleedMm}
+              height={heightMm + 2 * bleedMm}
+              fill="none"
+              stroke="#ef4444"
+              strokeWidth={0.25}
+              strokeDasharray="2 2"
+            />
+            {/* Safe margin boundary (Blue dashed) */}
+            <rect
+              x={margins.leftMm}
+              y={margins.topMm}
+              width={widthMm - (margins.leftMm + margins.rightMm)}
+              height={heightMm - (margins.topMm + margins.bottomMm)}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth={0.25}
+              strokeDasharray="2 2"
+            />
+          </>
+        )}
       </svg>
+
+      {/* Empty page hint overlay */}
+      {isEmpty && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <div className="bg-slate-900/80 text-white text-xs px-3 py-1.5 rounded-md shadow-md backdrop-blur-sm">
+            Tambah elemen dari panel kiri
+          </div>
+        </div>
+      )}
     </div>
   );
 }

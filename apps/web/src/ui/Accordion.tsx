@@ -18,6 +18,7 @@ export interface AccordionProps {
 
 export function Accordion({ items, type = 'multiple', defaultValue, className = '' }: AccordionProps) {
   return (
+    // @ts-expect-error Radix accordion overload type narrowing
     <RadixAccordion.Root
       type={type}
       defaultValue={defaultValue}

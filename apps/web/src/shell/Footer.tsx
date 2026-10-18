@@ -1,89 +1,159 @@
 import React from 'react';
 import { i18n } from '../i18n';
+import { Icon } from '../ui/Icon';
+import { ChevronLeft, ChevronRight, Grid, Minus, Plus, Eye } from 'lucide-react';
+import { PageRole } from '@studio-hybrid/core';
 
 export interface FooterProps {
+  currentPageIndex: number;
+  totalPages: number;
   zoom: number;
+  pageRole?: PageRole;
+  showGuides: boolean;
+  isMonochrome: boolean;
+  onPageChange: (index: number) => void;
   onZoomChange: (zoom: number) => void;
+  onToggleGuides: () => void;
+  onToggleMonochrome: () => void;
+  onFitView: () => void;
 }
 
-export function Footer({ zoom, onZoomChange }: FooterProps) {
+const ROLE_LABELS: Record<PageRole, string> = {
+  cover: 'Cover',
+  front_matter: 'Front Matter',
+  body: 'Body',
+  solutions: 'Solutions',
+  appendix: 'Appendix',
+};
+
+export function Footer({
+  currentPageIndex,
+  totalPages,
+  zoom,
+  pageRole = 'body',
+  showGuides,
+  isMonochrome,
+  onPageChange,
+  onZoomChange,
+  onToggleGuides,
+  onToggleMonochrome,
+  onFitView,
+}: FooterProps) {
+  const pageNumber = currentPageIndex + 1;
+  const isRecto = pageNumber % 2 === 1;
+  const spreadLabel = isRecto ? i18n.footer.recto : 'Verso (Kiri)';
+  const roleLabel = ROLE_LABELS[pageRole] || 'Body';
+
   return (
     <footer
       data-testid="shell-footer"
-      className="h-12 bg-[#0e1526] border-t border-[#1e2a3f] px-4 flex items-center justify-between text-slate-300 text-xs select-none z-20 shrink-0"
+      role="region"
+      aria-label="Footer"
+      tabIndex={0}
+      className="h-[var(--footer-height,36px)] bg-[var(--color-surface)] border-t border-[var(--color-border)] px-4 flex items-center justify-between text-[var(--color-text)] text-[var(--text-xs)] select-none z-[var(--z-footer,30)] shrink-0 shadow-[var(--shadow-sm)]"
     >
-      {/* Left: Page Navigator */}
-      <div className="flex items-center space-x-3">
+      {/* Left: Real Page Navigator, single-line page indicator, and role/side chip */}
+      <div className="flex items-center space-x-3 shrink-0">
         <button
           type="button"
-          className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#141d2e] border border-[#202d46] hover:bg-[#1a253a] text-slate-400 hover:text-white transition"
+          onClick={() => onPageChange(Math.max(0, currentPageIndex - 1))}
+          disabled={currentPageIndex <= 0}
+          className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface-muted)] border border-[var(--color-border)] hover:bg-[var(--color-border-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-30 disabled:pointer-events-none transition duration-[var(--transition-fast)]"
+          title="Halaman Sebelumnya"
         >
-          ‹
+          <Icon icon={ChevronLeft} size={14} label="Halaman Sebelumnya" />
         </button>
 
-        <div className="flex flex-col text-center">
-          <div className="flex items-center space-x-1 font-semibold text-white">
-            <span className="text-slate-400 font-normal">{i18n.footer.pageLabel}</span>
-            <span>1</span>
-            <span className="text-slate-500 font-normal">{i18n.footer.of}</span>
-            <span>50</span>
+        <div className="flex items-center space-x-2 whitespace-nowrap">
+          <div className="flex items-center space-x-1 font-semibold text-[var(--color-text)]">
+            <span className="text-[var(--color-text-muted)] font-normal">{i18n.footer.pageLabel}</span>
+            <span>{pageNumber}</span>
+            <span className="text-[var(--color-text-muted)] font-normal">{i18n.footer.of}</span>
+            <span>{totalPages || 1}</span>
           </div>
-          <span className="text-[10px] text-slate-400 leading-none">
-            {i18n.footer.recto}
+          <span className="text-slate-300" aria-hidden="true">·</span>
+          <span className="text-[11px] text-[var(--color-text-muted)] font-medium">
+            {roleLabel} / {spreadLabel}
           </span>
         </div>
 
         <button
           type="button"
-          className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#141d2e] border border-[#202d46] hover:bg-[#1a253a] text-slate-400 hover:text-white transition"
+          onClick={() => onPageChange(Math.min(totalPages - 1, currentPageIndex + 1))}
+          disabled={currentPageIndex >= totalPages - 1}
+          className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface-muted)] border border-[var(--color-border)] hover:bg-[var(--color-border-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-30 disabled:pointer-events-none transition duration-[var(--transition-fast)]"
+          title="Halaman Berikutnya"
         >
-          ›
+          <Icon icon={ChevronRight} size={14} label="Halaman Berikutnya" />
         </button>
       </div>
 
-      {/* Center & Right: Toggles & Zoom */}
-      <div className="flex items-center space-x-4">
-        {/* Toggle Garis Bantu ON */}
+      {/* Center & Right: Toggles (Guides, Monochrome), Zoom (25%-400%), Fit View, Preflight Status */}
+      <div className="flex items-center space-x-4 shrink-0">
+        {/* Toggle Garis Bantu */}
         <button
           type="button"
-          className="flex items-center space-x-1.5 bg-[#4f46e5] text-white px-3 py-1 rounded-xl font-medium text-xs shadow-md shadow-indigo-600/20"
+          onClick={onToggleGuides}
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-[var(--radius-lg)] font-medium text-[var(--text-xs)] transition duration-[var(--transition-fast)] ${
+            showGuides
+              ? 'bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 text-[var(--color-primary)] shadow-[var(--shadow-sm)]'
+              : 'bg-[var(--color-surface-muted)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+          }`}
+          title="Tampilkan / Sembunyikan Garis Bantu"
         >
-          <span>📐</span>
+          <Icon icon={Grid} size={13} />
           <span>{i18n.footer.guides}</span>
-          <span className="bg-indigo-700 text-white text-[9px] font-bold px-1.5 py-0.2 rounded uppercase">
-            {i18n.footer.on}
+          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-[var(--radius-sm)] uppercase ${showGuides ? 'bg-[var(--color-primary)] text-[var(--color-primary-contrast)]' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)]'}`}>
+            {showGuides ? i18n.footer.on : i18n.footer.off}
           </span>
         </button>
 
-        {/* Toggle Monokrom OFF */}
+        {/* Toggle Monokrom */}
         <button
           type="button"
-          className="flex items-center space-x-1.5 bg-[#141d2e] border border-[#202d46] hover:bg-[#1a253a] text-slate-300 px-3 py-1 rounded-xl font-medium text-xs transition"
+          onClick={onToggleMonochrome}
+          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-[var(--radius-lg)] font-medium text-[var(--text-xs)] transition duration-[var(--transition-fast)] ${
+            isMonochrome
+              ? 'bg-slate-900 text-white shadow-[var(--shadow-sm)]'
+              : 'bg-[var(--color-surface-muted)] border border-[var(--color-border)] hover:bg-[var(--color-border-muted)] text-[var(--color-text)]'
+          }`}
+          title="Pratinjau Monokrom (Hitam Putih)"
         >
+          <Icon icon={Eye} size={13} />
           <span>{i18n.footer.monochrome}</span>
-          <span className="bg-[#1f2c42] text-slate-400 text-[9px] font-bold px-1.5 py-0.2 rounded uppercase">
-            {i18n.footer.off}
+          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-[var(--radius-sm)] uppercase ${isMonochrome ? 'bg-white text-slate-900' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)]'}`}>
+            {isMonochrome ? i18n.footer.on : i18n.footer.off}
           </span>
         </button>
 
-        {/* Zoom Slider and Percentage */}
+        {/* Zoom Slider and Percentage (25% - 400%) */}
         <div className="flex items-center space-x-2">
-          <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-          </svg>
+          <button
+            type="button"
+            onClick={() => onZoomChange(Math.max(0.25, Number((zoom - 0.1).toFixed(2))))}
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+            title="Perkecil"
+          >
+            <Icon icon={Minus} size={12} label="Perkecil" />
+          </button>
           <input
             type="range"
-            min={0.5}
-            max={2}
+            min={0.25}
+            max={4.0}
             step={0.05}
             value={zoom}
             onChange={(e) => onZoomChange(Number(e.target.value))}
-            className="w-24 accent-indigo-500 cursor-pointer"
+            className="w-24 accent-[var(--color-primary)] cursor-pointer"
           />
-          <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span className="w-10 text-right font-semibold text-slate-200 text-xs">
+          <button
+            type="button"
+            onClick={() => onZoomChange(Math.min(4.0, Number((zoom + 0.1).toFixed(2))))}
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+            title="Perbesar"
+          >
+            <Icon icon={Plus} size={12} label="Perbesar" />
+          </button>
+          <span className="w-12 text-right font-semibold text-[var(--color-text)] text-[var(--text-xs)] tabular-nums">
             {Math.round(zoom * 100)}%
           </span>
         </div>
@@ -91,11 +161,18 @@ export function Footer({ zoom, onZoomChange }: FooterProps) {
         {/* Fit View Button */}
         <button
           type="button"
-          onClick={() => onZoomChange(1)}
-          className="bg-[#141d2e] hover:bg-[#1a253a] border border-[#202d46] px-3 py-1 rounded-xl font-medium text-slate-200 transition text-xs shadow-sm"
+          onClick={onFitView}
+          className="bg-[var(--color-surface-muted)] hover:bg-[var(--color-border-muted)] border border-[var(--color-border)] px-2.5 py-1 rounded-[var(--radius-lg)] font-medium text-[var(--color-text)] transition duration-[var(--transition-fast)] text-[var(--text-xs)] shadow-[var(--shadow-sm)]"
         >
           {i18n.footer.fit}
         </button>
+
+        <span className="text-slate-300" aria-hidden="true">·</span>
+
+        {/* Preflight Status: "Belum diperiksa" */}
+        <span className="text-[11px] text-[var(--color-text-muted)] font-medium whitespace-nowrap">
+          Belum diperiksa
+        </span>
       </div>
     </footer>
   );

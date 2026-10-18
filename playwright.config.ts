@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './apps/web/e2e',
   webServer: {
     command: 'pnpm --filter @studio-hybrid/web dev',
     port: 3000,

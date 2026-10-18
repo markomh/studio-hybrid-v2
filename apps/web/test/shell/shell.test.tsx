@@ -29,7 +29,7 @@ describe('5-Zone Shell Layout & Focus Mode (F1-7, V1 Parity)', () => {
     expect(html).toContain(i18n.appName);
     expect(html).toContain(i18n.header.focusMode);
     expect(html).toContain(i18n.header.utilities);
-    expect(html).toContain(i18n.header.share);
+    expect(html).toContain(i18n.header.export);
 
     // Left Rail i18n texts
     expect(html).toContain(i18n.rail.elements);
@@ -72,6 +72,24 @@ describe('5-Zone Shell Layout & Focus Mode (F1-7, V1 Parity)', () => {
     expect(focusHtml).toContain('data-testid="shell-header"');
     expect(focusHtml).toContain('data-testid="btn-focus-mode"');
     expect(focusHtml).toContain('data-testid="shell-canvas-workspace"');
+    expect(focusHtml).toContain('data-testid="floating-toolbar"');
     expect(focusHtml).toContain('data-testid="shell-footer"');
+  });
+
+  it('assigns role="region" and aria-label to all shell zones', () => {
+    const html = renderToString(<App initialFocusMode={false} />);
+
+    expect(html).toContain('role="region" aria-label="Header"');
+    expect(html).toContain('role="region" aria-label="Left Rail"');
+    expect(html).toContain('role="region" aria-label="Left Panel"');
+    expect(html).toContain('role="region" aria-label="Canvas Workspace"');
+    expect(html).toContain('role="region" aria-label="Inspector"');
+    expect(html).toContain('role="region" aria-label="Footer"');
+  });
+
+  it('renders min-width-warning banner with i18n text', () => {
+    const html = renderToString(<App initialFocusMode={false} />);
+    expect(html).toContain('class="min-width-warning"');
+    expect(html).toContain(i18n.minWidthWarning);
   });
 });
