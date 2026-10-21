@@ -59,9 +59,9 @@ export function Footer({
           onClick={() => onPageChange(Math.max(0, currentPageIndex - 1))}
           disabled={currentPageIndex <= 0}
           className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface-muted)] border border-[var(--color-border)] hover:bg-[var(--color-border-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-30 disabled:pointer-events-none transition duration-[var(--transition-fast)]"
-          title="Halaman Sebelumnya"
+          title={i18n.footer.prevPage}
         >
-          <Icon icon={ChevronLeft} size={14} label="Halaman Sebelumnya" />
+          <Icon icon={ChevronLeft} size={14} label={i18n.footer.prevPage} />
         </button>
 
         <div className="flex items-center space-x-2 whitespace-nowrap">
@@ -71,7 +71,7 @@ export function Footer({
             <span className="text-[var(--color-text-muted)] font-normal">{i18n.footer.of}</span>
             <span>{totalPages || 1}</span>
           </div>
-          <span className="text-slate-300" aria-hidden="true">·</span>
+          <span className="text-[var(--color-border)]" aria-hidden="true">·</span>
           <span className="text-[11px] text-[var(--color-text-muted)] font-medium">
             {roleLabel} / {spreadLabel}
           </span>
@@ -82,9 +82,9 @@ export function Footer({
           onClick={() => onPageChange(Math.min(totalPages - 1, currentPageIndex + 1))}
           disabled={currentPageIndex >= totalPages - 1}
           className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface-muted)] border border-[var(--color-border)] hover:bg-[var(--color-border-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-30 disabled:pointer-events-none transition duration-[var(--transition-fast)]"
-          title="Halaman Berikutnya"
+          title={i18n.footer.nextPage}
         >
-          <Icon icon={ChevronRight} size={14} label="Halaman Berikutnya" />
+          <Icon icon={ChevronRight} size={14} label={i18n.footer.nextPage} />
         </button>
       </div>
 
@@ -99,7 +99,7 @@ export function Footer({
               ? 'bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 text-[var(--color-primary)] shadow-[var(--shadow-sm)]'
               : 'bg-[var(--color-surface-muted)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
           }`}
-          title="Tampilkan / Sembunyikan Garis Bantu"
+          title={i18n.footer.toggleGuides}
         >
           <Icon icon={Grid} size={13} />
           <span>{i18n.footer.guides}</span>
@@ -114,14 +114,14 @@ export function Footer({
           onClick={onToggleMonochrome}
           className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-[var(--radius-lg)] font-medium text-[var(--text-xs)] transition duration-[var(--transition-fast)] ${
             isMonochrome
-              ? 'bg-slate-900 text-white shadow-[var(--shadow-sm)]'
+              ? 'bg-[var(--color-text)] text-[var(--color-surface)] shadow-[var(--shadow-sm)]'
               : 'bg-[var(--color-surface-muted)] border border-[var(--color-border)] hover:bg-[var(--color-border-muted)] text-[var(--color-text)]'
           }`}
-          title="Pratinjau Monokrom (Hitam Putih)"
+          title={i18n.footer.toggleMonochrome}
         >
           <Icon icon={Eye} size={13} />
           <span>{i18n.footer.monochrome}</span>
-          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-[var(--radius-sm)] uppercase ${isMonochrome ? 'bg-white text-slate-900' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)]'}`}>
+          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-[var(--radius-sm)] uppercase ${isMonochrome ? 'bg-[var(--color-surface)] text-[var(--color-text)]' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)]'}`}>
             {isMonochrome ? i18n.footer.on : i18n.footer.off}
           </span>
         </button>
@@ -132,9 +132,9 @@ export function Footer({
             type="button"
             onClick={() => onZoomChange(Math.max(0.25, Number((zoom - 0.1).toFixed(2))))}
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-            title="Perkecil"
+            title={i18n.footer.zoomOut}
           >
-            <Icon icon={Minus} size={12} label="Perkecil" />
+            <Icon icon={Minus} size={12} label={i18n.footer.zoomOut} />
           </button>
           <input
             type="range"
@@ -149,9 +149,9 @@ export function Footer({
             type="button"
             onClick={() => onZoomChange(Math.min(4.0, Number((zoom + 0.1).toFixed(2))))}
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-            title="Perbesar"
+            title={i18n.footer.zoomIn}
           >
-            <Icon icon={Plus} size={12} label="Perbesar" />
+            <Icon icon={Plus} size={12} label={i18n.footer.zoomIn} />
           </button>
           <span className="w-12 text-right font-semibold text-[var(--color-text)] text-[var(--text-xs)] tabular-nums">
             {Math.round(zoom * 100)}%
@@ -167,7 +167,7 @@ export function Footer({
           {i18n.footer.fit}
         </button>
 
-        <span className="text-slate-300" aria-hidden="true">·</span>
+        <span className="text-[var(--color-border)]" aria-hidden="true">·</span>
 
         {/* Preflight Status: "Belum diperiksa" */}
         <span className="text-[11px] text-[var(--color-text-muted)] font-medium whitespace-nowrap">

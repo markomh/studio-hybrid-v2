@@ -34,5 +34,34 @@ module.exports = {
         ],
       },
     },
+    {
+      files: ['packages/core/src/puzzles/**/*'],
+      rules: {
+        'no-restricted-syntax': [
+          'error',
+          {
+            selector: "MemberExpression[object.name='Math'][property.name='random']",
+            message: 'Math.random is strictly forbidden in puzzles. Use createRng(seed) instead.',
+          },
+          {
+            selector: "MemberExpression[object.name='Date'][property.name='now']",
+            message: 'Date.now is strictly forbidden in puzzles. Determinism required.',
+          },
+        ],
+        'no-restricted-properties': [
+          'error',
+          {
+            object: 'Math',
+            property: 'random',
+            message: 'Math.random is strictly forbidden in puzzles. Use createRng(seed) instead.',
+          },
+          {
+            object: 'Date',
+            property: 'now',
+            message: 'Date.now is strictly forbidden in puzzles. Determinism required.',
+          },
+        ],
+      },
+    },
   ],
 };

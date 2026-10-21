@@ -59,8 +59,8 @@ test.describe('5-Zone Shell Layout & Focus Mode (F3-A2)', () => {
         }
       }
 
-      // Verify no SVG in shell is wider than 32px
-      const svgs = await page.locator('svg').all();
+      // Verify no icon SVG in shell is wider than 32px (F1-5 finding: oversized icon bug)
+      const svgs = await page.locator('svg:not([data-testid="page-svg"])').all();
       for (const svg of svgs) {
         const box = await svg.boundingBox();
         if (box) {

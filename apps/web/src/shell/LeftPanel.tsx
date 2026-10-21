@@ -284,10 +284,10 @@ export function LeftPanel({
                         type="button"
                         onClick={() => onMovePage(page.id, index - 1)}
                         disabled={index === 0}
-                        title="Geser ke Atas"
+                        title={i18n.panelActions.moveUp}
                         className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-muted)] disabled:opacity-20 disabled:pointer-events-none"
                       >
-                        <Icon icon={ChevronUp} size={12} label="Geser ke Atas" />
+                        <Icon icon={ChevronUp} size={12} label={i18n.panelActions.moveUp} />
                       </button>
 
                       {/* Move Down */}
@@ -295,20 +295,20 @@ export function LeftPanel({
                         type="button"
                         onClick={() => onMovePage(page.id, index + 1)}
                         disabled={index === pages.length - 1}
-                        title="Geser ke Bawah"
+                        title={i18n.panelActions.moveDown}
                         className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-muted)] disabled:opacity-20 disabled:pointer-events-none"
                       >
-                        <Icon icon={ChevronDown} size={12} label="Geser ke Bawah" />
+                        <Icon icon={ChevronDown} size={12} label={i18n.panelActions.moveDown} />
                       </button>
 
                       {/* Duplicate */}
                       <button
                         type="button"
                         onClick={() => onDuplicatePage(page.id)}
-                        title="Duplikasi Halaman"
+                        title={i18n.panelActions.duplicatePage}
                         className="p-1 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-muted)]"
                       >
-                        <Icon icon={Copy} size={12} label="Duplikasi Halaman" />
+                        <Icon icon={Copy} size={12} label={i18n.panelActions.duplicatePage} />
                       </button>
 
                       {/* Delete */}
@@ -316,10 +316,10 @@ export function LeftPanel({
                         type="button"
                         onClick={() => onDeletePage(page.id)}
                         disabled={pages.length <= 1}
-                        title="Hapus Halaman"
+                        title={i18n.panelActions.deletePage}
                         className="p-1 rounded-[var(--radius-sm)] text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 disabled:opacity-20 disabled:pointer-events-none"
                       >
-                        <Icon icon={Trash2} size={12} label="Hapus Halaman" />
+                        <Icon icon={Trash2} size={12} label={i18n.panelActions.deletePage} />
                       </button>
                     </div>
                   </div>

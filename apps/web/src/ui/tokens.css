@@ -25,6 +25,9 @@
   --color-canvas-dot: #CBD5E1;
   --color-canvas-page: #FFFFFF;
   --color-canvas-page-shadow: rgba(0, 0, 0, 0.08);
+  --color-guide-bleed: #EF4444;
+  --color-guide-margin: #3B82F6;
+  --color-guide-trim: #CBD5E1;
 
   /* ─── Spacing ─── */
   --spacing-0: 0px;

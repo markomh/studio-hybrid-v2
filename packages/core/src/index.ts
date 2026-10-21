@@ -7,4 +7,10 @@ export * from './text';
 export * from './layout';
 export * from './pdf';
 export * from './book/margins';
-
+export * from './ids';
+export * from './registry';
+export * from './puzzles/rng';
+export { generateWordSearch, normalizeWord, MAX_ATTEMPTS, DEFAULT_WORDSEARCH_THEMES } from './puzzles/wordsearch';
+export { generateSudoku, CLUES } from './puzzles/sudoku';
+export { generateWorksheet, GRADE_CONFIGS, WorksheetValidationError } from './puzzles/worksheet';
+export { generateMaze, solveMazeBFS, MAZE_ALGORITHMS, MAZE_GENERATORS, MazeValidationError } from './puzzles/maze';

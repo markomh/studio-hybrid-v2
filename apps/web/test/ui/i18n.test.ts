@@ -10,8 +10,19 @@ describe('I18n Dictionary & Usage (F3-A1)', () => {
     expect(typeof t('uiKit.title')).toBe('string');
   });
 
-  it('scans component .tsx files to ensure i18n usage or lack of unlocalized Indonesian text', () => {
+  it('scans component .tsx files to ensure i18n usage or lack of unlocalized Indonesian text in titles', () => {
     const srcDir = path.resolve(__dirname, '../../src');
+    const prohibitedHardcodedTitles = [
+      'title="Kunci Elemen"',
+      'title="Halaman Berikutnya"',
+      'title="Halaman Sebelumnya"',
+      'title="Duplikasi Elemen"',
+      'title="Bawa ke Atas"',
+      'title="Turunkan ke Bawah"',
+      'title="Hapus Elemen"',
+      'title="Tutup Inspector"',
+      'title="Buka Inspector"',
+    ];
     
     function scanDir(dir: string) {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -21,13 +32,13 @@ describe('I18n Dictionary & Usage (F3-A1)', () => {
           scanDir(fullPath);
         } else if (entry.isFile() && entry.name.endsWith('.tsx')) {
           const content = fs.readFileSync(fullPath, 'utf-8');
-          // Component files should use i18n t() or ui tokens/props
-          expect(content).toBeDefined();
+          for (const phrase of prohibitedHardcodedTitles) {
+            expect(content).not.toContain(phrase);
+          }
         }
       }
     }
 
     scanDir(srcDir);
-    expect(true).toBe(true);
   });
 });

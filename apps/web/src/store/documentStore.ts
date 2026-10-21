@@ -26,6 +26,9 @@ export interface DocumentState {
   updateElement: (pageId: string, elementId: string, updates: Partial<Element>) => void;
   moveElement: (pageId: string, elementId: string, x: number, y: number) => void;
   deleteElement: (pageId: string, elementId: string) => void;
+  toggleLock: (ids: string[] | string) => void;
+  duplicateElement: (pageId: string, id: string) => string | null;
+  reorderElement: (pageId: string, id: string, direction: 'front' | 'forward' | 'backward' | 'back') => void;
 
   // Page Operations (F3-R3)
   addPage: (role?: PageRole, afterPageId?: string) => string;
@@ -159,6 +162,162 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       set((state) => ({
         document: nextDoc,
         past: [...state.past, { patches, inversePatches, label: 'deleteElement' }].slice(-MAX_HISTORY),
+        future: [],
+      }));
+    }
+  },
+
+  toggleLock: (ids) => {
+    const currentState = get();
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    if (idArray.length === 0) return;
+
+    const [nextDoc, patches, inversePatches] = produceWithPatches(
+      currentState.document,
+      (draft: Document) => {
+        for (const page of draft.pages) {
+          for (const el of page.elements) {
+            if (idArray.includes(el.id)) {
+              el.locked = !el.locked;
+            }
+          }
+        }
+      }
+    ) as [Document, Patch[], Patch[]];
+
+    if (patches.length === 0) return;
+
+    if (currentState._isBatching) {
+      set({
+        document: nextDoc,
+        _batchPatches: [...(currentState._batchPatches || []), ...patches],
+        _batchInversePatches: [...inversePatches, ...(currentState._batchInversePatches || [])],
+      });
+    } else {
+      set((state) => ({
+        document: nextDoc,
+        past: [...state.past, { patches, inversePatches, label: 'toggleLock' }].slice(-MAX_HISTORY),
+        future: [],
+      }));
+    }
+  },
+
+  duplicateElement: (pageId, id) => {
+    const currentState = get();
+    const targetPage = currentState.document.pages.find((p) => p.id === pageId);
+    if (!targetPage) return null;
+
+    const targetEl = targetPage.elements.find((e) => e.id === id);
+    if (!targetEl) return null;
+
+    const newElementId = crypto.randomUUID();
+
+    const cloneElement = (el: Element): Element => {
+      const cloned = JSON.parse(JSON.stringify(el)) as Element;
+      cloned.id = newElementId;
+      cloned.x = el.x + 5;
+      cloned.y = el.y + 5;
+      if ('children' in cloned && Array.isArray((cloned as unknown as { children: Element[] }).children)) {
+        (cloned as unknown as { children: Element[] }).children = (
+          cloned as unknown as { children: Element[] }
+        ).children.map((child) => ({
+          ...child,
+          id: crypto.randomUUID(),
+        }));
+      }
+      return cloned;
+    };
+
+    const duplicated = cloneElement(targetEl);
+
+    const [nextDoc, patches, inversePatches] = produceWithPatches(
+      currentState.document,
+      (draft: Document) => {
+        const page = draft.pages.find((p) => p.id === pageId);
+        if (page) {
+          const idx = page.elements.findIndex((e) => e.id === id);
+          if (idx !== -1) {
+            page.elements.splice(idx + 1, 0, duplicated);
+          } else {
+            page.elements.push(duplicated);
+          }
+        }
+      }
+    ) as [Document, Patch[], Patch[]];
+
+    if (currentState._isBatching) {
+      set({
+        document: nextDoc,
+        _batchPatches: [...(currentState._batchPatches || []), ...patches],
+        _batchInversePatches: [...inversePatches, ...(currentState._batchInversePatches || [])],
+      });
+    } else {
+      set((state) => ({
+        document: nextDoc,
+        past: [...state.past, { patches, inversePatches, label: 'duplicateElement' }].slice(-MAX_HISTORY),
+        future: [],
+      }));
+    }
+
+    return newElementId;
+  },
+
+  reorderElement: (pageId, id, direction) => {
+    const currentState = get();
+    const page = currentState.document.pages.find((p) => p.id === pageId);
+    if (!page) return;
+
+    const idx = page.elements.findIndex((e) => e.id === id);
+    if (idx === -1) return;
+
+    if (direction === 'back' || direction === 'backward') {
+      if (idx === 0) return;
+    }
+    if (direction === 'front' || direction === 'forward') {
+      if (idx === page.elements.length - 1) return;
+    }
+
+    const [nextDoc, patches, inversePatches] = produceWithPatches(
+      currentState.document,
+      (draft: Document) => {
+        const draftPage = draft.pages.find((p) => p.id === pageId);
+        if (!draftPage) return;
+
+        const currentIdx = draftPage.elements.findIndex((e) => e.id === id);
+        if (currentIdx === -1) return;
+
+        if (direction === 'front') {
+          const [el] = draftPage.elements.splice(currentIdx, 1);
+          draftPage.elements.push(el);
+        } else if (direction === 'back') {
+          const [el] = draftPage.elements.splice(currentIdx, 1);
+          draftPage.elements.unshift(el);
+        } else if (direction === 'forward') {
+          if (currentIdx < draftPage.elements.length - 1) {
+            const [el] = draftPage.elements.splice(currentIdx, 1);
+            draftPage.elements.splice(currentIdx + 1, 0, el);
+          }
+        } else if (direction === 'backward') {
+          if (currentIdx > 0) {
+            const [el] = draftPage.elements.splice(currentIdx, 1);
+            draftPage.elements.splice(currentIdx - 1, 0, el);
+          }
+        }
+      }
+    ) as [Document, Patch[], Patch[]];
+
+    if (patches.length === 0) return;
+
+    if (currentState._isBatching) {
+      set({
+        document: nextDoc,
+        _batchPatches: [...(currentState._batchPatches || []), ...patches],
+        _batchInversePatches: [...inversePatches, ...(currentState._batchInversePatches || [])],
+      });
+    } else {
+      set((state) => ({
+        document: nextDoc,
+        past: [...state.past, { patches, inversePatches, label: 'reorderElement' }].slice(-MAX_HISTORY),
         future: [],
       }));
     }

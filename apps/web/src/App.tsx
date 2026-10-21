@@ -3,7 +3,7 @@ import { useDocumentStore } from './store/documentStore';
 import { AutosaveManager, SaveStatus } from './persistence';
 import { Header, LeftRail, LeftPanel, Inspector, Footer, FloatingToolbar } from './shell';
 import { PageSvg } from './canvas/PageSvg';
-import { TextElement, PageRole, renderPdf } from '@studio-hybrid/core';
+import { TextElement, PageRole, renderPdf, newId } from '@studio-hybrid/core';
 import { i18n } from './i18n';
 import { Icon } from './ui/Icon';
 import { SlidersHorizontal } from 'lucide-react';
@@ -180,10 +180,10 @@ export function App({ initialFocusMode = false }: AppProps = {}) {
   const handleAddText = useCallback(() => {
     if (!activePageId) return;
 
-    const newId = crypto.randomUUID();
+    const elementId = newId();
     const activePage = document.pages.find((p) => p.id === activePageId) || document.pages[0];
     const newElement: TextElement = {
-      id: newId,
+      id: elementId,
       type: 'text',
       x: 30,
       y: 40 + (activePage?.elements.length || 0) * 15,
@@ -193,7 +193,7 @@ export function App({ initialFocusMode = false }: AppProps = {}) {
       opacity: 1,
       locked: false,
       hidden: false,
-      text: 'Ketik teks di sini...',
+      text: i18n.defaultText,
       fontFamily: 'sans',
       fontSizePt: 14,
       lineHeight: 1.2,
@@ -203,11 +203,11 @@ export function App({ initialFocusMode = false }: AppProps = {}) {
       underline: false,
       caps: false,
       align: 'left',
-      color: '#0f172a',
+      color: '#000000',
     };
 
     addElement(activePageId, newElement);
-    setSelectedElementId(newId);
+    setSelectedElementId(elementId);
   }, [activePageId, document.pages, addElement]);
 
   return (
@@ -294,10 +294,10 @@ export function App({ initialFocusMode = false }: AppProps = {}) {
               type="button"
               data-testid="btn-open-inspector"
               onClick={() => setIsInspectorOpen(true)}
-              title="Buka Inspector"
+              title={i18n.inspector.open}
               className="absolute right-0 top-16 z-[var(--z-panel,20)] bg-[var(--color-surface-raised)] border-l border-y border-[var(--color-border)] rounded-l-[var(--radius-md)] p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-muted)] shadow-[var(--shadow-md)] transition duration-[var(--transition-fast)]"
             >
-              <Icon icon={SlidersHorizontal} size={16} label="Buka Inspector" />
+              <Icon icon={SlidersHorizontal} size={16} label={i18n.inspector.open} />
             </button>
           )}
 

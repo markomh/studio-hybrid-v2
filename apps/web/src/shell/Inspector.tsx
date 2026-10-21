@@ -58,10 +58,10 @@ export function Inspector({ document, activePageId, isOpen, onClose }: Inspector
             type="button"
             data-testid="btn-close-inspector"
             onClick={onClose}
-            title="Tutup Inspector"
+            title={i18n.inspector.close}
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-muted)] p-1 rounded-[var(--radius-sm)] transition duration-[var(--transition-fast)]"
           >
-            <Icon icon={X} size={14} label="Tutup Inspector" />
+            <Icon icon={X} size={14} label={i18n.inspector.close} />
           </button>
         )}
       </div>

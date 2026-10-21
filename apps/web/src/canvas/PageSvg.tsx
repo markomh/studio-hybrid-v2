@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { Document, layout, PageLayoutResult, LayoutPrimitive, computeMargins } from '@studio-hybrid/core';
+import { i18n } from '../i18n';
 
 export interface PageSvgProps {
   document: Document;
@@ -113,7 +114,7 @@ export function PageSvg({
 
   return (
     <div
-      className="relative inline-block shadow-md border border-slate-300 bg-white select-none transition-all"
+      className="relative inline-block shadow-md border border-[var(--color-border)] bg-[var(--color-surface)] select-none transition-all"
       style={{ filter: isMonochrome ? 'grayscale(100%)' : 'none' }}
     >
       <svg
@@ -160,7 +161,7 @@ export function PageSvg({
                 fontFamily={FONT_MAP[p.fontFamily] || 'sans-serif'}
                 className="cursor-move select-none"
                 style={{
-                  outline: isSelected ? '1px dashed #3b82f6' : 'none',
+                  outline: isSelected ? '1px dashed var(--color-primary)' : 'none',
                 }}
                 onMouseDown={(e) => handleMouseDown(e, p.elementId)}
               >
@@ -175,23 +176,24 @@ export function PageSvg({
         {/* Guides overlay inside SVG */}
         {showGuides && (
           <>
-            {/* Bleed line (Red dashed) */}
+            {/* Trim boundary */}
             <rect
               x={0}
               y={0}
               width={widthMm}
               height={heightMm}
               fill="none"
-              stroke="#cbd5e1"
+              stroke="var(--color-guide-trim)"
               strokeWidth={0.25}
             />
+            {/* Bleed line (Red dashed) */}
             <rect
               x={-bleedMm}
               y={-bleedMm}
               width={widthMm + 2 * bleedMm}
               height={heightMm + 2 * bleedMm}
               fill="none"
-              stroke="#ef4444"
+              stroke="var(--color-guide-bleed)"
               strokeWidth={0.25}
               strokeDasharray="2 2"
             />
@@ -202,7 +204,7 @@ export function PageSvg({
               width={widthMm - (margins.leftMm + margins.rightMm)}
               height={heightMm - (margins.topMm + margins.bottomMm)}
               fill="none"
-              stroke="#3b82f6"
+              stroke="var(--color-guide-margin)"
               strokeWidth={0.25}
               strokeDasharray="2 2"
             />
@@ -213,8 +215,8 @@ export function PageSvg({
       {/* Empty page hint overlay */}
       {isEmpty && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-          <div className="bg-slate-900/80 text-white text-xs px-3 py-1.5 rounded-md shadow-md backdrop-blur-sm">
-            Tambah elemen dari panel kiri
+          <div className="bg-[var(--color-surface-raised)] text-[var(--color-text)] border border-[var(--color-border)] text-[var(--text-xs)] px-3 py-1.5 rounded-[var(--radius-md)] shadow-[var(--shadow-md)]">
+            {i18n.canvas.emptyHint}
           </div>
         </div>
       )}

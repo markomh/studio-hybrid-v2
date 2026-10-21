@@ -1,19 +1,21 @@
 {
   "name": "studio-hybrid-v2",
   "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.0.0",
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm --prefix apps/web run dev",
-    "build": "npm run build --workspace=packages/core && npm run build --workspace=apps/web",
+    "predev": "corepack enable",
+    "dev": "corepack pnpm --filter @studio-hybrid/web dev",
+    "prebuild": "corepack enable",
+    "build": "corepack pnpm --filter @studio-hybrid/core build && corepack pnpm --filter @studio-hybrid/web build",
     "lint": "eslint . --ignore-pattern 'docs/**'",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "depcheck": "depcheck --ignores=dependency-cruiser,immer,zustand,dexie,jszip,fake-indexeddb,@types/jszip,fontkit,@types/fontkit,pdf-lib,@pdf-lib/fontkit,@axe-core/playwright && depcruise --validate .dependency-cruiser.cjs packages apps",
-    "check": "npm run lint && npm run typecheck && npm test && npm run depcheck",
+    "check": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm depcheck",
     "e2e": "playwright test"
   },
   "devDependencies": {

@@ -28,9 +28,71 @@ export const TextElementSchema = ElementBaseSchema.extend({
   placeholder: z.boolean().optional(),
 });
 
-// Union for element types (prepared for future expansion)
+export const MazeAlgorithmSchema = z.enum(['recursive-backtracker', 'prim', 'kruskal']);
+export type MazeAlgorithm = z.infer<typeof MazeAlgorithmSchema>;
+
+export const MazeParamsSchema = z.object({
+  kind: z.literal('maze'),
+  rows: z.number().int().min(2).max(60),
+  cols: z.number().int().min(2).max(60),
+  algorithm: MazeAlgorithmSchema,
+  wallThicknessMm: z.number().positive(),
+  wallColor: z.string(),
+  solutionColor: z.string(),
+  startIcon: z.string().optional(),
+  finishIcon: z.string().optional(),
+});
+export type MazeParams = z.infer<typeof MazeParamsSchema>;
+
+export const WordSearchParamsSchema = z.object({
+  kind: z.literal('wordsearch'),
+  size: z.number().int().min(8).max(20),
+  words: z.array(z.string()),
+  allowDiagonal: z.boolean(),
+  allowReverse: z.boolean(),
+});
+export type WordSearchParams = z.infer<typeof WordSearchParamsSchema>;
+
+export const SudokuParamsSchema = z.object({
+  kind: z.literal('sudoku'),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+});
+export type SudokuParams = z.infer<typeof SudokuParamsSchema>;
+
+export const WorksheetTopicSchema = z.enum(['addition', 'subtraction', 'multiplication', 'pattern']);
+export type WorksheetTopic = z.infer<typeof WorksheetTopicSchema>;
+
+export const WorksheetParamsSchema = z.object({
+  kind: z.literal('worksheet'),
+  subject: z.string().default('math'),
+  topic: WorksheetTopicSchema,
+  grade: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
+  problemCount: z.number().int().min(1).max(30),
+});
+export type WorksheetParams = z.infer<typeof WorksheetParamsSchema>;
+
+export const PuzzleParamsSchema = z.discriminatedUnion('kind', [
+  MazeParamsSchema,
+  WordSearchParamsSchema,
+  SudokuParamsSchema,
+  WorksheetParamsSchema,
+]);
+export type PuzzleParams = z.infer<typeof PuzzleParamsSchema>;
+export type PuzzleKind = PuzzleParams;
+
+export const PuzzleElementSchema = ElementBaseSchema.extend({
+  type: z.literal('puzzle'),
+  params: PuzzleParamsSchema,
+  seed: z.number().int(),
+  showSolution: z.boolean(),
+  kind: PuzzleParamsSchema.optional(),
+});
+export type PuzzleElement = z.infer<typeof PuzzleElementSchema>;
+
+// Union for element types
 export const ElementSchema = z.discriminatedUnion('type', [
   TextElementSchema,
+  PuzzleElementSchema,
 ]);
 
 export const NumberingSchema = z.object({

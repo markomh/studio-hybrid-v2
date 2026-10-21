@@ -1,11 +1,11 @@
 import { Document, Page } from '../schema';
-import { wrapText, TextLine } from '../text';
-import { ptToMm } from '../units';
 import { computeMargins } from '../book/margins';
+import { getElementDefinition, ElementDefinitionNotFoundError } from '../registry';
 
 export interface BasePrimitive {
   elementId?: string;
   zIndex?: number;
+  opacity?: number;
 }
 
 export interface TextLinePrimitive extends BasePrimitive {
@@ -31,9 +31,50 @@ export interface RectPrimitive extends BasePrimitive {
   stroke?: string;
   strokeWidth?: number;
   strokeDasharray?: string;
+  rx?: number;
+  ry?: number;
 }
 
-export type LayoutPrimitive = TextLinePrimitive | RectPrimitive;
+export interface LinePrimitive extends BasePrimitive {
+  kind: 'line';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  stroke: string;
+  strokeWidth: number;
+  strokeDasharray?: string;
+}
+
+export interface PathPrimitive extends BasePrimitive {
+  kind: 'path';
+  d: string;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+  strokeDasharray?: string;
+}
+
+export interface EllipsePrimitive extends BasePrimitive {
+  kind: 'ellipse';
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+  strokeDasharray?: string;
+}
+
+export type LayoutPrimitive =
+  | TextLinePrimitive
+  | RectPrimitive
+  | LinePrimitive
+  | PathPrimitive
+  | EllipsePrimitive;
+
+export const MIN_CELL_MM = 3.5;
 
 export interface PageLayoutResult {
   pageId: string;
@@ -47,6 +88,7 @@ export interface PageLayoutResult {
     outsideMm: number;
   };
   primitives: LayoutPrimitive[];
+  warnings: string[];
 }
 
 export function layout(doc: Document, pageId?: string): PageLayoutResult {
@@ -63,6 +105,7 @@ export function layout(doc: Document, pageId?: string): PageLayoutResult {
   const bleedMm = doc.meta.bleedMm;
 
   const primitives: LayoutPrimitive[] = [];
+  const warnings: string[] = [];
 
   // 1. Page background (white paper)
   primitives.push({
@@ -92,45 +135,21 @@ export function layout(doc: Document, pageId?: string): PageLayoutResult {
     strokeDasharray: '2 2',
   });
 
-  // 3. Elements layout
+  // 3. Elements layout via registry definition
   for (const el of targetPage.elements) {
     if (el.hidden) continue;
 
-    const lines: TextLine[] = wrapText(
-      el.text,
-      el.fontFamily,
-      el.fontSizePt,
-      el.w,
-      el.letterSpacingPt
-    );
-
-    const lineHeightMm = ptToMm(el.fontSizePt * el.lineHeight);
-    const baselineOffsetMm = ptToMm(el.fontSizePt * 0.85);
-
-    lines.forEach((line, idx) => {
-      let lineX = el.x;
-      if (el.align === 'center') {
-        lineX = el.x + (el.w - line.widthMm) / 2;
-      } else if (el.align === 'right') {
-        lineX = el.x + el.w - line.widthMm;
-      }
-
-      const lineY = el.y + baselineOffsetMm + idx * lineHeightMm;
-
-      primitives.push({
-        kind: 'text',
-        elementId: el.id,
-        text: line.text,
-        x: Number(lineX.toFixed(4)),
-        y: Number(lineY.toFixed(4)),
-        widthMm: Number(line.widthMm.toFixed(4)),
-        fontSizePt: el.fontSizePt,
-        fontFamily: el.fontFamily,
-        color: el.color,
-        align: el.align,
-        overflow: line.overflow,
-      });
+    const def = getElementDefinition(el);
+    if (!def) {
+      throw new ElementDefinitionNotFoundError(el.type);
+    }
+    const elementPrimitives = def.layout(el, {
+      pageWidthMm: widthMm,
+      pageHeightMm: heightMm,
+      margins: computedMargins,
+      warnings,
     });
+    primitives.push(...elementPrimitives);
   }
 
   return {
@@ -145,5 +164,6 @@ export function layout(doc: Document, pageId?: string): PageLayoutResult {
       outsideMm: doc.meta.margins.outsideMm,
     },
     primitives,
+    warnings,
   };
 }
